@@ -7,6 +7,8 @@ use App\CountryOption;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseController;
 use App\Http\Resources\UserResource;
+use App\Models\AccountPlan;
+use App\Models\Plan;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -34,7 +36,7 @@ class UserController extends Controller
                 'nonprofit_name' => 'required | string',
                 'email' => 'required | email | unique:users,email',
                 'password' => ['required', Password::min(8)],
-                'country' => ['required', [new Enum(CountryOption::class)]],
+                'country' => ['required', new Enum(CountryOption::class)],
             ], [
                 'first_name.required' => 'First name is required.',
                 'first_name.string' => 'First name must be containing characters.',
@@ -63,7 +65,6 @@ class UserController extends Controller
             $error = $err->validator->errors();
             return $this->responseController->responseValidationError('Error in Registration', $error);
         }
-
     }
 
     public function login(Request $request)
@@ -100,5 +101,42 @@ class UserController extends Controller
             return $this->responseController->responseValidationError('Error in logout', $error);
         }
         return $this->responseController->responseValidation('Logged out');
+    }
+
+    public function assignPlan(Request $request)
+    {
+        try {
+            //Validate the request
+            $request->validate([
+                "plan_id" => "required|integer"
+            ], [
+                'plan_id.required' => 'Plan id is required to assign plan'
+            ]);
+            if ($request->hasHeader('nonprofit_name')) {
+                $user = User::where('nonprofit_name', $request->header('nonprofit_name'))->first();
+                if (!$user) {
+                    return $this->responseController->responseValidationError('Failed', 'User not found');
+                }
+                $plan = Plan::where('id', $request->plan_id)->first();
+                $account_plan = new AccountPlan;
+                $account_plan->plan_id = $request->plan_id;
+                $account_plan->user_id = $user->id;
+                if ($plan->plan_type == "1") {
+                    $account_plan->campaign_limit = 10;
+                } elseif ($plan->plan_type == "2") {
+                    $account_plan->campaign_limit = 20;
+                } else {
+                    $account_plan->campaign_limit = 500;
+                }
+                $account_plan->save();
+                dd($account_plan);
+                return $this->responseController->responseValidation('Account assigned with Plan', $account_plan);
+            } else {
+                return $this->responseController->responseValidationError('Failed', 'Please provide nonprofit_name in header');
+            }
+        } catch (Exception $ex) {
+            $err = $ex->getMessage();
+            return $this->responseController->responseValidationError('Error in assigning plan', $err);
+        }
     }
 }

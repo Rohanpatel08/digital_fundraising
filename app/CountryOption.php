@@ -6,8 +6,8 @@ use Illuminate\Validation\Rules\Enum;
 
 
 
-class CountryOption extends Enum
+enum CountryOption: string
 {
-    const US = 'US';
-    const Canada = 'Canada';
+    case US = 'US';
+    case Canada = 'Canada';
 }
