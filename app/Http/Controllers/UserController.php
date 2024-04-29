@@ -49,23 +49,17 @@ class UserController extends Controller
                 'email.unique' => 'This email is already in use.',
                 'country.required' => 'country is required.'
             ]);
-
-            $user = User::where('nonprofit_name', $request->nonprofit_name)->where('country', $request->country)->first();
-            if (!$user) {
-                $user = new User;
-                $user->first_name = $request['first_name'];
-                $user->last_name = $request['last_name'];
-                $user->nonprofit_name = $request['nonprofit_name'];
-                $user->email = $request['email'];
-                $user->password = Hash::make($request['password']);
-                $user->country = $request['country'];
-                $user->save();
-                $user->sendEmailVerificationNotification();
-                Auth::login($user, true);
-                $user = new UserResource($user);
-            } else {
-                return $this->responseController->responseValidationError('Error in Registration', "Account '" . $request->nonprofit_name . "' is already created in " . $request->country);
-            }
+            $user = new User;
+            $user->first_name = $request['first_name'];
+            $user->last_name = $request['last_name'];
+            $user->nonprofit_name = $request['nonprofit_name'];
+            $user->email = $request['email'];
+            $user->password = Hash::make($request['password']);
+            $user->country = $request['country'];
+            $user->save();
+            $user->sendEmailVerificationNotification();
+            Auth::login($user, true);
+            $user = new UserResource($user);
             return $this->responseController->responseValidation('User Created', $user);
         } catch (ValidationException $err) {
             $error = $err->validator->errors();
@@ -112,6 +106,7 @@ class UserController extends Controller
     public function assignPlan(Request $request)
     {
         try {
+            //Validate the request
             $request->validate([
                 "plan_id" => "required|integer"
             ], [
@@ -123,10 +118,6 @@ class UserController extends Controller
                     return $this->responseController->responseValidationError('Failed', 'User not found');
                 }
                 $plan = Plan::where('id', $request->plan_id)->first();
-                $current_plan = AccountPlan::where('plan_id', $plan->id)->first();
-                if ($current_plan) {
-                    return $this->responseController->responseValidationError('Failed', 'You have already subscribed ' . $plan->plan_name . ' plan');
-                }
                 $account_plan = new AccountPlan;
                 $account_plan->plan_id = $request->plan_id;
                 $account_plan->user_id = $user->id;
