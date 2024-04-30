@@ -7,6 +7,7 @@ use App\CountryOption;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseController;
 use App\Http\Resources\UserResource;
+use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Plan;
 use App\Models\User;
@@ -49,17 +50,22 @@ class UserController extends Controller
                 'email.unique' => 'This email is already in use.',
                 'country.required' => 'country is required.'
             ]);
-            $user = new User;
-            $user->first_name = $request['first_name'];
-            $user->last_name = $request['last_name'];
-            $user->nonprofit_name = $request['nonprofit_name'];
-            $user->email = $request['email'];
-            $user->password = Hash::make($request['password']);
-            $user->country = $request['country'];
-            $user->save();
-            $user->sendEmailVerificationNotification();
-            Auth::login($user, true);
-            $user = new UserResource($user);
+            $user = Account::where('nonprofit_name', $request->nonprofit_name)->where('country', $request->country)->first();
+            if ($user) {
+                return $this->responseController->responseValidationError('Failed', $request->nonprofit_name . ' Account already exists in ' . $request->country);
+            } else {
+                $user = new Account;
+                $user->first_name = $request['first_name'];
+                $user->last_name = $request['last_name'];
+                $user->nonprofit_name = $request['nonprofit_name'];
+                $user->email = $request['email'];
+                $user->password = Hash::make($request['password']);
+                $user->country = $request['country'];
+                $user->save();
+                $user->sendEmailVerificationNotification();
+                Auth::login($user, true);
+                $user = new UserResource($user);
+            }
             return $this->responseController->responseValidation('User Created', $user);
         } catch (ValidationException $err) {
             $error = $err->validator->errors();
@@ -74,7 +80,7 @@ class UserController extends Controller
                 'email' => 'required | email',
                 'password' => ['required', Password::min(8)->numbers()]
             ]);
-            $user = User::where("email", $request['email'])->first();
+            $user = Account::where("email", $request['email'])->first();
             if ($user) {
                 if (Hash::check($request['password'], $user->password)) {
                     $token = $user->createToken($user->username . '-AuthToken')->plainTextToken;
@@ -113,20 +119,23 @@ class UserController extends Controller
                 'plan_id.required' => 'Plan id is required to assign plan'
             ]);
             if ($request->hasHeader('nonprofit_name')) {
-                $user = User::where('nonprofit_name', $request->header('nonprofit_name'))->first();
+                $user = Account::where('nonprofit_name', $request->header('nonprofit_name'))->first();
                 if (!$user) {
                     return $this->responseController->responseValidationError('Failed', 'User not found');
                 }
                 $plan = Plan::where('id', $request->plan_id)->first();
                 $account_plan = new AccountPlan;
                 $account_plan->plan_id = $request->plan_id;
-                $account_plan->user_id = $user->id;
+                $account_plan->account_id = $user->id;
                 if ($plan->plan_type == "1") {
                     $account_plan->campaign_limit = 10;
+                    $account_plan->expires_at = now()->addWeek()->addHour();
                 } elseif ($plan->plan_type == "2") {
                     $account_plan->campaign_limit = 20;
+                    $account_plan->expires_at = now()->addMonth()->addHour();
                 } else {
                     $account_plan->campaign_limit = 500;
+                    $account_plan->expires_at = now()->addYear()->addHour();
                 }
                 $account_plan->save();
                 return $this->responseController->responseValidation('Account assigned with Plan', $account_plan);

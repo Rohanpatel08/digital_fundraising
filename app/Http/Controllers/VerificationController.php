@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class VerificationController extends Controller
             if (!$request->hasValidSignature()) {
                 return response()->json(["msg" => "Invalid/Expired url provided."], 401);
             }
-            $user = User::find($user_id);
+            $user = Account::find($user_id);
             $email_verification = false;
             if (!$user->hasVerifiedEmail()) {
                 $user->markEmailAsVerified();

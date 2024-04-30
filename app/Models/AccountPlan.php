@@ -15,8 +15,8 @@ class AccountPlan extends Model
         return $this->belongsTo(Plan::class);
     }
 
-    public function user()
+    public function account()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Account::class);
     }
 }

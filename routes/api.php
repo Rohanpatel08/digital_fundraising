@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\DonationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Http\Request;
@@ -20,3 +21,4 @@ Route::post('assign/plan', [UserController::class, 'assignPlan']);
 
 Route::post('/campaign/create', [CampaignController::class, 'createCampaign']);
 Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
+Route::post('/campaign/{code}/donate', [DonationController::class, 'donations']);

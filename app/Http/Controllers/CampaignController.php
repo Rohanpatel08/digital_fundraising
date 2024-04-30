@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CampaignResource;
+use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Campaign;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
@@ -28,12 +28,12 @@ class CampaignController extends Controller
                 'banner_image' => 'required',
                 'banner_image.*' => 'image| mimes:jpeg,png,jpg,webp',
             ]);
-            $account = User::where('nonprofit_name', $request->header('nonprofit_name'))->first();
+            $account = Account::where('nonprofit_name', $request->header('nonprofit_name'))->first();
             if (!$account) {
                 return $this->responseController->responseValidationError('Failed', "Please provide a valid non-profit name in header");
             }
             $account_id = $account->id;
-            $account_plan = AccountPlan::where('user_id', $account_id)->orderBy('created_at', 'DESC')->first();
+            $account_plan = AccountPlan::where('account_id', $account_id)->orderBy('created_at', 'DESC')->first();
             if (!$account_plan) {
                 return $this->responseController->responseValidationError('Failed', "You don't have active subscription plan");
             }
@@ -46,26 +46,25 @@ class CampaignController extends Controller
             $banner_image = URL::asset('public/banners/images') . $banner_image;
             array_push($image, $banner_image);
             $image = json_encode($image);
-
             $c_images = [];
-            if ($request->hasFile('campaign_images')) {
-                $images = [];
-                array_push($images, $request->file('campaign_images'));
-                foreach ($images as $image) {
-                    $img = '/' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                    $request->campaign_images->move(public_path('campaign/images'), $img);
+            if ($request->hasFile('images')) {
+
+                foreach ($request->file('images') as $c_image) {
+                    $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
+                    $c_image->move(public_path('campaign/images'), $img);
                     $campaign_image = URL::asset('public/campaign/images') . $img;
                     $c_images[] = $campaign_image;
                 }
-                dd($c_images);
             }
             $images = json_encode($c_images);
             $campaign = new Campaign;
-            $campaign->user_id = $account_id;
+            $campaign->account_id = $account_id;
             $campaign->account_plan_id = $account_plan->id;
             $campaign->unique_code = rand(100000, 999999);
             $campaign->campaign_name = $request->campaign_name;
             $campaign->description = $request->description;
+            $campaign->campaign_url = 'http://127.0.0.1:8000/' . substr($request->route()->uri(), 0, 13) . $campaign->unique_code;
+            // $campaign->donation_url = 'http://127.0.0.1:8000/' . substr($request->route()->uri(), 0, 13) . $campaign->unique_code . '/donate';
             $campaign->banner_image = $image;
             $campaign->images = $images ? $images : null;
             $campaign->save();
@@ -83,7 +82,11 @@ class CampaignController extends Controller
     public function getCampaignByCode(string $id)
     {
         $campaign = Campaign::where('unique_code', $id)->first();
-        $campaign->banner_image = json_decode($campaign->banner_image);
+        if (!$campaign) {
+            return $this->responseController->responseValidationError('Failed', 'Campaign not found');
+        }
+        $campaign->banner_image = implode('', json_decode($campaign->banner_image));
+        $campaign->images = json_decode($campaign->images);
         $campaign = new CampaignResource($campaign);
         $data = [
             "msg" => "Campaign retrieved successfully",
