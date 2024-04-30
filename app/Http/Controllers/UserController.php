@@ -112,7 +112,6 @@ class UserController extends Controller
     public function assignPlan(Request $request)
     {
         try {
-            //Validate the request
             $request->validate([
                 "plan_id" => "required|integer"
             ], [
