@@ -22,23 +22,23 @@ class CampaignController extends Controller
     public function createCampaign(Request $request)
     {
         try {
+            $account = Account::where('id', $request->header('account-id'))->first();
+            if (!$account) {
+                return $this->responseController->responseValidationError('Failed', ['Please provide account-id in header']);
+            }
             $request->validate([
                 'campaign_name' => 'required | string',
                 'description' => 'required | string',
                 'banner_image' => 'required',
                 'banner_image.*' => 'image| mimes:jpeg,png,jpg,webp',
             ]);
-            $account = Account::where('nonprofit_name', $request->header('nonprofit_name'))->first();
-            if (!$account) {
-                return $this->responseController->responseValidationError('Failed', "Please provide a valid non-profit name in header");
-            }
             $account_id = $account->id;
             $account_plan = AccountPlan::where('account_id', $account_id)->orderBy('created_at', 'DESC')->first();
             if (!$account_plan) {
-                return $this->responseController->responseValidationError('Failed', "You don't have active subscription plan");
+                return $this->responseController->responseValidationError('Failed', ["You don't have active subscription plan"]);
             }
             if ($account_plan->campaign_limit <= 0) {
-                return $this->responseController->responseValidationError('Failed', "Your campaign creation limit is exceeded.");
+                return $this->responseController->responseValidationError('Failed', ["Your campaign creation limit is exceeded."]);
             }
             $image = [];
             $banner_image = '/' . time() . '.' . $request->banner_image->extension();
@@ -64,7 +64,6 @@ class CampaignController extends Controller
             $campaign->campaign_name = $request->campaign_name;
             $campaign->description = $request->description;
             $campaign->campaign_url = 'http://127.0.0.1:8000/' . substr($request->route()->uri(), 0, 13) . $campaign->unique_code;
-            // $campaign->donation_url = 'http://127.0.0.1:8000/' . substr($request->route()->uri(), 0, 13) . $campaign->unique_code . '/donate';
             $campaign->banner_image = $image;
             $campaign->images = $images ? $images : null;
             $campaign->save();
@@ -83,7 +82,7 @@ class CampaignController extends Controller
     {
         $campaign = Campaign::where('unique_code', $id)->first();
         if (!$campaign) {
-            return $this->responseController->responseValidationError('Failed', 'Campaign not found');
+            return $this->responseController->responseValidationError('Failed', ['Campaign not found']);
         }
         $campaign->banner_image = implode('', json_decode($campaign->banner_image));
         $campaign->images = json_decode($campaign->images);

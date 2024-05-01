@@ -6,11 +6,11 @@ namespace App\Http\Controllers;
 use App\CountryOption;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseController;
+use App\Http\Resources\AccountPlanResource;
 use App\Http\Resources\UserResource;
 use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Plan;
-use App\Models\User;
 use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -33,10 +33,10 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'first_name' => 'required | string | regex:/^[a-zA-Z\s]+/',
-                'last_name' => 'required | string | regex:/^[a-zA-Z\s]+/',
+                'first_name' => 'required | regex:/^[a-zA-Z ]*$/',           // /^[a-zA-Z\s]+/
+                'last_name' => 'required | regex: /^[a-zA-Z ]*$/',
                 'nonprofit_name' => 'required | string',
-                'email' => 'required | regex:/^([a-z0-9+-]+)(.[a-z0-9+-]+)*@([a-z0-9-]+.)+[a-z]{2,6}$/ix | unique:users,email',
+                'email' => 'required | regex: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/| unique:accounts,email',
                 'password' => ['required', Password::min(8)],
                 'country' => ['required', new Enum(CountryOption::class)],
             ], [
@@ -49,8 +49,8 @@ class UserController extends Controller
                 'nonprofit_name.required' => 'Non profit name is required.',
                 'nonprofit_name.string' => 'Non profit name must be containing characters.',
                 'email.required' => 'Email is required.',
-                'email.regex' => 'Enter valid email address.',
                 'email.unique' => 'This email is already in use.',
+                'email.regex' => 'The email format is invalid.',
                 'password.required' => 'Password is required.',
                 'password.min' => 'Password must be 8 characters long.',
                 'country.required' => 'country is required.'
@@ -69,6 +69,7 @@ class UserController extends Controller
                 $user->save();
                 $user->sendEmailVerificationNotification();
                 Auth::login($user, true);
+                $user = Auth::user();
                 $user = new UserResource($user);
             }
             return $this->responseController->responseValidation('User Created', $user);
@@ -124,8 +125,8 @@ class UserController extends Controller
             ], [
                 'plan_id.required' => 'Plan id is required to assign plan'
             ]);
-            if ($request->hasHeader('nonprofit_name')) {
-                $user = Account::where('nonprofit_name', $request->header('nonprofit_name'))->first();
+            if ($request->hasHeader('account-id')) {
+                $user = Account::where('id', $request->header('account-id'))->first();
                 if (!$user) {
                     return $this->responseController->responseValidationError('Failed', 'User not found');
                 }
@@ -144,9 +145,10 @@ class UserController extends Controller
                     $account_plan->expires_at = now()->addYear()->addHour();
                 }
                 $account_plan->save();
+                $account_plan = new AccountPlanResource($account_plan);
                 return $this->responseController->responseValidation('Account assigned with Plan', $account_plan);
             } else {
-                return $this->responseController->responseValidationError('Failed', 'Please provide nonprofit_name in header');
+                return $this->responseController->responseValidationError('Failed', ['Please provide account-id in header']);
             }
         } catch (Exception $ex) {
             $err = $ex->getMessage();
