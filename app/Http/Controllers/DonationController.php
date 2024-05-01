@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DonationResource;
 use App\Models\Campaign;
 use App\Models\Donation;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -28,7 +28,7 @@ class DonationController extends Controller
                 'donner_name.required' => 'Donner name is required',
                 'donner_email.required' => 'Donner email is required',
                 'donner_email.email' => 'Donner email should be valid email address',
-                'amount.required' => 'Donation amount is required to donate',
+                'amount.required' => 'Donation amount is required',
                 'amount.integer' => 'amount should be in numbers'
             ]);
             $campaign = Campaign::where('unique_code', $id)->first();
@@ -42,6 +42,8 @@ class DonationController extends Controller
             $donation->donner_email = $request->donner_email;
             $donation->amount = $request->amount;
             $donation->save();
+            $donation = new DonationResource($donation);
+            return $this->responseController->responseValidation('success', $donation);
         } catch (ValidationException $exception) {
             $exception = $exception->validator->errors();
             return $this->responseController->responseValidationError('Failed', $exception);
