@@ -24,21 +24,25 @@ class CampaignController extends Controller
         try {
             $account = Account::where('id', $request->header('account-id'))->first();
             if (!$account) {
-                return $this->responseController->responseValidationError('Failed', ['Please provide account-id in header']);
+                return $this->responseController->responseValidationError('Failed', ["account-id" => ['Please provide account-id in header']]);
             }
             $request->validate([
                 'campaign_name' => 'required | string',
                 'description' => 'required | string',
-                'banner_image' => 'required',
-                'banner_image.*' => 'image| mimes:jpeg,png,jpg,webp',
+                'banner_image' => 'required | mimes:jpeg,png,jpg',
+            ], [
+                'campaign_name.required' => 'campaign name is required.',
+                'description.required' => 'campaign name is required.',
+                'banner_image.required' => 'banner image is required.',
+                'banner_image.mimes' => 'banner image must be in jpeg, png, or jpg format.',
             ]);
             $account_id = $account->id;
             $account_plan = AccountPlan::where('account_id', $account_id)->orderBy('created_at', 'DESC')->first();
             if (!$account_plan) {
-                return $this->responseController->responseValidationError('Failed', ["You don't have active subscription plan"]);
+                return $this->responseController->responseValidationError('Failed', ["active_subscription" => ["You don't have active subscription plan"]]);
             }
             if ($account_plan->campaign_limit <= 0) {
-                return $this->responseController->responseValidationError('Failed', ["Your campaign creation limit is exceeded."]);
+                return $this->responseController->responseValidationError('Failed', ["campaign_limit" => ["Your campaign creation limit is exceeded."]]);
             }
             $image = [];
             $banner_image = '/' . time() . '.' . $request->banner_image->extension();
@@ -82,7 +86,7 @@ class CampaignController extends Controller
     {
         $campaign = Campaign::where('unique_code', $id)->first();
         if (!$campaign) {
-            return $this->responseController->responseValidationError('Failed', ['Campaign not found']);
+            return $this->responseController->responseValidationError('Failed', ["campaign" => ['Campaign not found']]);
         }
         $campaign->banner_image = implode('', json_decode($campaign->banner_image));
         $campaign->images = json_decode($campaign->images);
