@@ -14,7 +14,7 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/user/register', [UserController::class, 'register']);
 Route::post('/user/login', [UserController::class, 'login']);
-Route::post('/user/logout', [UserController::class, 'logout']);
+Route::post('/user/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
 
 Route::post('assign/plan', [UserController::class, 'assignPlan']);
@@ -22,3 +22,4 @@ Route::post('assign/plan', [UserController::class, 'assignPlan']);
 Route::post('/campaign/create', [CampaignController::class, 'createCampaign']);
 Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
 Route::post('/campaign/{code}/donate', [DonationController::class, 'donations']);
+Route::get('/campaign/{code}/donation', [DonationController::class, 'getDonationByCampaign']);

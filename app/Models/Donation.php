@@ -21,4 +21,9 @@ class Donation extends Model
     {
         return $this->belongsTo(Campaign::class);
     }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
 }

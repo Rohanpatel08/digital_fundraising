@@ -21,8 +21,13 @@ class Campaign extends Model
     {
         return $this->belongsTo(AccountPlan::class);
     }
-    public function user()
+    public function account()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function donation()
+    {
+        return $this->hasMany(Donation::class);
     }
 }

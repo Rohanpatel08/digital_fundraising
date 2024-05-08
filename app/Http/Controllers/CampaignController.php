@@ -74,7 +74,7 @@ class CampaignController extends Controller
 
             $account_plan->campaign_limit -= 1;
             $account_plan->update();
-            $campaign = new CampaignResource($campaign);
+            $campaign = $campaign->campaign_url;
         } catch (ValidationException $err) {
             $error = $err->validator->errors();
             return $this->responseController->responseValidationError('Failed', $error);

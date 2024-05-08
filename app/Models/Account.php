@@ -52,4 +52,13 @@ class Account extends Authenticatable implements MustVerifyEmail, CanResetPasswo
             'password' => 'hashed',
         ];
     }
+
+    public function donation()
+    {
+        return $this->hasMany(Donation::class);
+    }
+    public function campaign()
+    {
+        return $this->hasMany(Campaign::class);
+    }
 }
