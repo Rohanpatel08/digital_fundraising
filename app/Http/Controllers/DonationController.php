@@ -42,10 +42,9 @@ class DonationController extends Controller
                 return $this->responseController->responseValidationError('Failed', 'Campaign not found');
             }
             $account = $campaign->account()->first();
-            // dd($account);
             $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET'));
 
-            Stripe::setApiKey(env('STRIPE_SECRET'));
+            Stripe::setApiKey(config('services.stripe.secret'));
 
             $response = $stripe->paymentIntents->create([
                 'amount' => $request->amount,
@@ -53,13 +52,23 @@ class DonationController extends Controller
                 'payment_method' => 'pm_card_visa',
                 'description' => 'Donated by Rohan',
             ]);
-            $stripe->paymentIntents->confirm(
+            $res = $stripe->paymentIntents->confirm(
                 $response->id,
                 [
                     'payment_method' => 'pm_card_visa',
                     'return_url' => 'http://127.0.0.1:8000/api/campaign/' . $campaign->unique_code,
                 ]
             );
+            if ($res->status === 'requires_action') {
+                $nextActionType = $res->next_action->type;
+                switch ($nextActionType) {
+                    case 'redirect_to_url':
+                        $redirectUrl = $res->next_action->redirect_to_url->url;
+                        return $redirectUrl;
+                    default:
+                        break;
+                }
+            }
             $donation = new Donation;
             $donation->campaign_id = $campaign->id;
             $donation->account_id = $account->id;
@@ -99,6 +108,28 @@ class DonationController extends Controller
         } catch (ValidationException $e) {
             $err = $e->validator->errors();
             return $this->responseController->responseValidationError('Failed', $err);
+        }
+    }
+
+    public function getDonationByAccountWise(Request $request)
+    {
+        try {
+            $account = Account::where('id', $request->header('account-id'))->first();
+            if (!$account) {
+                return $this->responseController->responseValidationError('Failed', ["account-id" => ['Please provide account-id in header']]);
+            }
+            $donations = $account->donation()->get();
+            $totalDonation = 0;
+            foreach ($donations as $key => $donation) {
+                $totalDonation += $donation->amount;
+            }
+
+
+            return $this->responseController->responseValidation('Total donation in ' . $account->nonprofit_name . ' campaign. (Donation in USD)', $totalDonation);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $errCode = $e->getCode();
+            return $this->responseController->responseValidationError('Failed', $err, $errCode);
         }
     }
 }

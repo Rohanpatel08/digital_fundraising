@@ -23,3 +23,4 @@ Route::post('/campaign/create', [CampaignController::class, 'createCampaign']);
 Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
 Route::post('/campaign/{code}/donate', [DonationController::class, 'donations']);
 Route::get('/campaign/{code}/donation', [DonationController::class, 'getDonationByCampaign']);
+Route::get('/account/donation', [DonationController::class, 'getDonationByAccountWise']);
