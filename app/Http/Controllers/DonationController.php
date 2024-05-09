@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Stripe\Charge;
+use Stripe\PaymentIntent;
 use Stripe\Stripe;
 use Stripe\Token;
 
@@ -52,7 +53,13 @@ class DonationController extends Controller
                 'payment_method' => 'pm_card_visa',
                 'description' => 'Donated by Rohan',
             ]);
-
+            $stripe->paymentIntents->confirm(
+                $response->id,
+                [
+                    'payment_method' => 'pm_card_visa',
+                    'return_url' => 'http://127.0.0.1:8000/api/campaign/' . $campaign->unique_code,
+                ]
+            );
             $donation = new Donation;
             $donation->campaign_id = $campaign->id;
             $donation->account_id = $account->id;
@@ -88,7 +95,7 @@ class DonationController extends Controller
             foreach ($donations as $key => $donation) {
                 $totalDonation += $donation->amount;
             }
-            return $this->responseController->responseValidation('Total donation in ' . $campaign->campaign_name . ' campaign', $totalDonation);
+            return $this->responseController->responseValidation('Total donation in ' . $campaign->campaign_name . ' campaign. (Donation in USD)', $totalDonation);
         } catch (ValidationException $e) {
             $err = $e->validator->errors();
             return $this->responseController->responseValidationError('Failed', $err);
