@@ -49,7 +49,7 @@ class DonationController extends Controller
             $response = $stripe->paymentIntents->create([
                 'amount' => $request->amount,
                 'currency' => 'usd',
-                'payment_method' => 'pm_card_visa',
+                'payment_method' => 'pm_card_visa_debit',
                 'description' => 'Donated by Rohan',
             ]);
             $res = $stripe->paymentIntents->confirm(
@@ -59,16 +59,6 @@ class DonationController extends Controller
                     'return_url' => 'http://127.0.0.1:8000/api/campaign/' . $campaign->unique_code,
                 ]
             );
-            if ($res->status === 'requires_action') {
-                $nextActionType = $res->next_action->type;
-                switch ($nextActionType) {
-                    case 'redirect_to_url':
-                        $redirectUrl = $res->next_action->redirect_to_url->url;
-                        return $redirectUrl;
-                    default:
-                        break;
-                }
-            }
             $donation = new Donation;
             $donation->campaign_id = $campaign->id;
             $donation->account_id = $account->id;
@@ -77,7 +67,19 @@ class DonationController extends Controller
             $donation->amount = $request->amount / 100;
             $donation->save();
             $donation = new DonationResource($donation);
-            return $this->responseController->responseValidation($response->status);
+
+            // if ($res->status === 'requires_action') {
+            //     $nextActionType = $res->next_action->type;
+            //     switch ($nextActionType) {
+            //         case 'redirect_to_url':
+            //             $redirectUrl = $res->next_action->redirect_to_url->url;
+            //             return redirect()->away($redirectUrl);
+            //             break;
+            //         default:
+            //             break;
+            //     }
+            // }
+            return $this->responseController->responseValidation($res->status);
         } catch (ValidationException $exception) {
             $exception = $exception->validator->errors();
             return $this->responseController->responseValidationError('Failed', $exception);
@@ -111,7 +113,7 @@ class DonationController extends Controller
         }
     }
 
-    public function getDonationByAccountWise(Request $request)
+    public function getDonationByAccount(Request $request)
     {
         try {
             $account = Account::where('id', $request->header('account-id'))->first();
@@ -123,8 +125,6 @@ class DonationController extends Controller
             foreach ($donations as $key => $donation) {
                 $totalDonation += $donation->amount;
             }
-
-
             return $this->responseController->responseValidation('Total donation in ' . $account->nonprofit_name . ' campaign. (Donation in USD)', $totalDonation);
         } catch (Exception $e) {
             $err = $e->getMessage();
