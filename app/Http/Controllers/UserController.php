@@ -64,6 +64,7 @@ class UserController extends Controller
                 return $this->responseController->responseValidationError('Failed', ["duplicate_account" => [$request->nonprofit_name . ' Account already exists in ' . $country->country_name]]);
             } else {
                 $user = new Account;
+                $user->id = uuid_create();
                 $user->first_name = $request['first_name'];
                 $user->last_name = $request['last_name'];
                 $user->nonprofit_name = $request['nonprofit_name'];
@@ -72,8 +73,8 @@ class UserController extends Controller
                 $user->country = $country->country_name;
                 $user->save();
                 $user->sendEmailVerificationNotification();
-                Auth::login($user, true);
-                $user = Auth::user();
+                // Auth::login($user, true);
+                // $user = Auth::user();
                 $user = new UserResource($user);
             }
             return $this->responseController->responseValidation('User Created', $user);
@@ -127,7 +128,7 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                "plan_id" => "required|integer"
+                "plan_id" => "required|string"
             ], [
                 'plan_id.required' => 'Plan id is required to assign plan'
             ]);
@@ -138,16 +139,17 @@ class UserController extends Controller
                 }
                 $plan = Plan::where('id', $request->plan_id)->first();
                 $account_plan = new AccountPlan;
+                $account_plan->id = uuid_create();
                 $account_plan->plan_id = $request->plan_id;
                 $account_plan->account_id = $user->id;
                 if ($plan->plan_type == "1") {
-                    $account_plan->campaign_limit = 10;
+                    $account_plan->campaign_limit = $plan->campaign_limit;
                     $account_plan->expires_at = now()->addWeek()->addHour();
                 } elseif ($plan->plan_type == "2") {
-                    $account_plan->campaign_limit = 20;
+                    $account_plan->campaign_limit = $plan->campaign_limit;
                     $account_plan->expires_at = now()->addMonth()->addHour();
                 } else {
-                    $account_plan->campaign_limit = 500;
+                    $account_plan->campaign_limit = $plan->campaign_limit;
                     $account_plan->expires_at = now()->addYear()->addHour();
                 }
                 $account_plan->save();

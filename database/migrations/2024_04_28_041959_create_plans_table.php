@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('plans', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('plan_type')->unique();
             $table->string('plan_name');
+            $table->integer('campaign_limit');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
