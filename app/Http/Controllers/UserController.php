@@ -64,7 +64,6 @@ class UserController extends Controller
                 return $this->responseController->responseValidationError('Failed', ["duplicate_account" => [$request->nonprofit_name . ' Account already exists in ' . $country->country_name]]);
             } else {
                 $user = new Account;
-                $user->id = uuid_create();
                 $user->first_name = $request['first_name'];
                 $user->last_name = $request['last_name'];
                 $user->nonprofit_name = $request['nonprofit_name'];
@@ -72,7 +71,7 @@ class UserController extends Controller
                 $user->password = Hash::make($request['password']);
                 $user->country = $country->country_name;
                 $user->save();
-                $user->sendEmailVerificationNotification();
+                // $user->sendEmailVerificationNotification();
                 // Auth::login($user, true);
                 // $user = Auth::user();
                 $user = new UserResource($user);

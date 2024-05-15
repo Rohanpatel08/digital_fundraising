@@ -15,7 +15,7 @@ Route::get('/user', function (Request $request) {
 Route::post('/user/register', [UserController::class, 'register']);
 Route::post('/user/login', [UserController::class, 'login']);
 Route::post('/user/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('/email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
+// Route::get('/email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
 
 Route::post('assign/plan', [UserController::class, 'assignPlan']);
 
