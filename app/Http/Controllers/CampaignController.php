@@ -45,31 +45,31 @@ class CampaignController extends Controller
                 return $this->responseController->responseValidationError('Failed', ["campaign_limit" => ["Your campaign creation limit is exceeded."]]);
             }
             $image = [];
-            $banner_image = '/' . time() . '.' . $request->banner_image->extension();
-            $request->banner_image->move(public_path('banners/images'), $banner_image);
-            $banner_image = URL::asset('public/banners/images') . $banner_image;
-            array_push($image, $banner_image);
-            $image = json_encode($image);
+            $b_image = time() . '.' . $request->banner_image->extension();
+            $request->banner_image->move(public_path('banners/images'), $b_image);
+            // $banner_image = URL::asset('/banners/images') . $b_image;
+            // dd($b_image);
             $c_images = [];
-            if ($request->hasFile('images')) {
+            // if ($request->hasFile('images')) {
 
-                foreach ($request->file('images') as $c_image) {
-                    $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
-                    $c_image->move(public_path('campaign/images'), $img);
-                    $campaign_image = URL::asset('public/campaign/images') . $img;
-                    $c_images[] = $campaign_image;
-                }
-            }
-            $images = json_encode($c_images);
+            //     foreach ($request->file('images') as $c_image) {
+            //         $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
+            //         $c_image->move(public_path('campaign/images'), $img);
+            //         $campaign_image = URL::asset('public/campaign/images') . $img;
+            //         $c_images[] = $campaign_image;
+            //     }
+            // }
+            // dd($b_image);
+            // $images = json_encode($c_images);
             $campaign = new Campaign;
             $campaign->account_id = $account_id;
             $campaign->account_plan_id = $account_plan->id;
             $campaign->unique_code = rand(100000, 999999);
             $campaign->campaign_name = $request->campaign_name;
             $campaign->description = $request->description;
-            $campaign->campaign_url = 'http://127.0.0.1:8000/' . substr($request->route()->uri(), 0, 13) . $campaign->unique_code;
-            $campaign->banner_image = $image;
-            $campaign->images = $images ? $images : null;
+            $campaign->campaign_url = env('CAMPAIGN_URL') . $campaign->unique_code;
+            $campaign->banner_image = $b_image;
+            // $campaign->images = isset($c_images) ? $c_images : [];
             $campaign->save();
 
             $account_plan->campaign_limit -= 1;
@@ -88,8 +88,7 @@ class CampaignController extends Controller
         if (!$campaign) {
             return $this->responseController->responseValidationError('Failed', ["campaign" => ['Campaign not found']]);
         }
-        $campaign->banner_image = implode('', json_decode($campaign->banner_image));
-        $campaign->images = json_decode($campaign->images);
+        $campaign->banner_image = URL::asset('/banners/images') . '/' . $campaign->banner_image;
         $campaign = new CampaignResource($campaign);
         $data = [
             "msg" => "Campaign retrieved successfully",

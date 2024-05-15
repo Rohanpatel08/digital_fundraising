@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('campaign_name');
             $table->longText('description');
             $table->string('campaign_url')->nullable();
-            $table->json('banner_image')->nullable();
-            $table->json('images')->nullable();
+            $table->string('banner_image')->nullable();
+            $table->string('images')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
