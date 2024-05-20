@@ -56,7 +56,7 @@ class DonationController extends Controller
                 $response->id,
                 [
                     'payment_method' => 'pm_card_visa',
-                    'return_url' => 'http://127.0.0.1:8000/api/campaign/' . $campaign->unique_code,
+                    'return_url' => env('CAMPAIGN_URL') . $campaign->unique_code,
                 ]
             );
             $donation = new Donation;

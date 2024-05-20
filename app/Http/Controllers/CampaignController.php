@@ -44,22 +44,17 @@ class CampaignController extends Controller
             if ($account_plan->campaign_limit <= 0) {
                 return $this->responseController->responseValidationError('Failed', ["campaign_limit" => ["Your campaign creation limit is exceeded."]]);
             }
-            $image = [];
             $b_image = time() . '.' . $request->banner_image->extension();
             $request->banner_image->move(public_path('banners/images'), $b_image);
-            // $banner_image = URL::asset('/banners/images') . $b_image;
-            // dd($b_image);
+
             $c_images = [];
             if ($request->hasFile('images')) {
-
                 foreach ($request->file('images') as $c_image) {
                     $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
                     $c_image->move(public_path('campaign/images'), $img);
-                    $campaign_image = URL::asset('public/campaign/images') . $img;
-                    $c_images[] = $campaign_image;
+                    $c_images[] = $img;
                 }
             }
-            // dd($b_image);
             $images = json_encode($c_images);
             $campaign = new Campaign;
             $campaign->account_id = $account_id;
@@ -89,6 +84,13 @@ class CampaignController extends Controller
             return $this->responseController->responseValidationError('Failed', ["campaign" => ['Campaign not found']]);
         }
         $campaign->banner_image = URL::asset('/banners/images') . '/' . $campaign->banner_image;
+        $c_images = [];
+        $images = json_decode($campaign->images);
+        foreach ($images as $key => $img) {
+            $img = URL::asset('/campaign/images') . $img;
+            array_push($c_images, $img);
+        }
+        $campaign->images = $c_images;
         $campaign = new CampaignResource($campaign);
         $data = [
             "msg" => "Campaign retrieved successfully",
