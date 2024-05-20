@@ -71,8 +71,8 @@ class UserController extends Controller
                 $user->password = Hash::make($request['password']);
                 $user->country = $country->country_name;
                 $user->save();
-                // $user->sendEmailVerificationNotification();
-                // Auth::login($user, true);
+                $user->sendEmailVerificationNotification();
+                // Auth::login($user);
                 // $user = Auth::user();
                 $user = new UserResource($user);
             }
