@@ -50,17 +50,17 @@ class CampaignController extends Controller
             // $banner_image = URL::asset('/banners/images') . $b_image;
             // dd($b_image);
             $c_images = [];
-            // if ($request->hasFile('images')) {
+            if ($request->hasFile('images')) {
 
-            //     foreach ($request->file('images') as $c_image) {
-            //         $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
-            //         $c_image->move(public_path('campaign/images'), $img);
-            //         $campaign_image = URL::asset('public/campaign/images') . $img;
-            //         $c_images[] = $campaign_image;
-            //     }
-            // }
+                foreach ($request->file('images') as $c_image) {
+                    $img = '/' . time() . '_' . uniqid() . '.' . $c_image->getClientOriginalExtension();
+                    $c_image->move(public_path('campaign/images'), $img);
+                    $campaign_image = URL::asset('public/campaign/images') . $img;
+                    $c_images[] = $campaign_image;
+                }
+            }
             // dd($b_image);
-            // $images = json_encode($c_images);
+            $images = json_encode($c_images);
             $campaign = new Campaign;
             $campaign->account_id = $account_id;
             $campaign->account_plan_id = $account_plan->id;
@@ -69,7 +69,7 @@ class CampaignController extends Controller
             $campaign->description = $request->description;
             $campaign->campaign_url = env('CAMPAIGN_URL') . $campaign->unique_code;
             $campaign->banner_image = $b_image;
-            // $campaign->images = isset($c_images) ? $c_images : [];
+            $campaign->images = isset($images) ? $images : [];
             $campaign->save();
 
             $account_plan->campaign_limit -= 1;
