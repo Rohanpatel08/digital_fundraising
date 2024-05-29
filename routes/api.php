@@ -11,19 +11,26 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-
-Route::post('/user/register', [UserController::class, 'register']);
-Route::post('/user/login', [UserController::class, 'login']);
+Route::controller(UserController::class)->group(function () {
+    Route::post('/user/register', 'register');
+    Route::post('/user/login', 'login');
+});
 Route::get('/email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('/user/logout', [UserController::class, 'logout']);
-    Route::post('assign/plan', [UserController::class, 'assignPlan']);
+    Route::controller(UserController::class)->group(function () {
+        Route::post('/user/logout', 'logout');
+        Route::post('assign/plan', 'assignPlan');
+    });
 
     Route::post('/campaign/create', [CampaignController::class, 'createCampaign']);
-    Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
-    Route::post('/campaign/{code}/donate', [DonationController::class, 'donations']);
-    Route::get('/campaign/{code}/donation', [DonationController::class, 'getDonationByCampaign']);
-    Route::get('/account/donation', [DonationController::class, 'getDonationByAccount']);
+
+    Route::controller(DonationController::class)->group(function () {
+        Route::post('campaign/{code}/donate', 'donations');
+        Route::get('campaign/{code}/donation', 'getDonationByCampaign');
+        Route::get('/account/donation', 'getDonationByAccount');
+    });
 });
+
+Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
