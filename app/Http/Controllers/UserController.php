@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseController;
 use App\Http\Resources\AccountPlanResource;
 use App\Http\Resources\UserResource;
+use App\Jobs\VerifyEmailJob;
 use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Country;
@@ -71,7 +72,8 @@ class UserController extends Controller
                 $user->password = Hash::make($request['password']);
                 $user->country = $country->country_name;
                 $user->save();
-                $user->sendEmailVerificationNotification();
+                VerifyEmailJob::dispatch($user);
+                // $user->sendEmailVerificationNotification();
                 // Auth::login($user);
                 // $user = Auth::user();
                 $user = new UserResource($user);
