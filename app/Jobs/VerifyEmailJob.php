@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 
 class VerifyEmailJob implements ShouldQueue
 {
@@ -20,8 +19,9 @@ class VerifyEmailJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(Account $account)
+    public function __construct($account)
     {
+        $this->account = new Account();
         $this->account = $account;
     }
 

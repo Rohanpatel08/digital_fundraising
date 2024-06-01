@@ -15,9 +15,9 @@ Route::controller(UserController::class)->group(function () {
     Route::post('/user/register', 'register');
     Route::post('/user/login', 'login');
 });
-Route::get('/email/verify/{id}', [VerificationController::class, 'verify'])->name('verification.verify');
+Route::get('/public/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'isAuth'])->group(function () {
 
     Route::controller(UserController::class)->group(function () {
         Route::post('/user/logout', 'logout');

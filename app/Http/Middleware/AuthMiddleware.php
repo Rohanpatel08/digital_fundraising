@@ -15,8 +15,8 @@ class AuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->get('user');
-        if ($user->hasVerifiedEmail) {
+        $user = $request->user();
+        if ($user->hasVerifiedEmail()) {
             return $next($request);
         }
         return response()->json(['errKey' => false, 'message' => 'Verify your email first.']);

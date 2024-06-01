@@ -116,7 +116,7 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         try {
-            $user = Auth::user();
+            $user = $request->user();
             $user->tokens()->delete();
         } catch (Exception $e) {
             $error = $e->getMessage();
