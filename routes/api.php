@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\auth\ForgotPasswordController;
+use App\Http\Controllers\auth\ResetPasswordController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\UserController;
@@ -31,6 +33,9 @@ Route::middleware(['auth:sanctum', 'isAuth'])->group(function () {
         Route::get('campaign/{code}/donation', 'getDonationByCampaign');
         Route::get('/account/donation', 'getDonationByAccount');
     });
+
+    Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPassword']);
+    Route::post('password/reset', [ResetPasswordController::class, 'resetPassword']);
 });
 
 Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);
