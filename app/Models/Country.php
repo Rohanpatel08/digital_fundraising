@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Plan extends Model
+class Country extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $table = 'country';
     protected $fillable = [
-        'plan_type',
-        'plan_name',
-        'campaign_limit'
+        'country_name'
     ];
 }

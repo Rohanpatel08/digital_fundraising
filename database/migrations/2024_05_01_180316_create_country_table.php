@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('donations', function (Blueprint $table) {
+        Schema::create('country', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('campaign_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('account_id')->constrained()->onDelete('cascade');
-            $table->string('donner_name');
-            $table->string('donner_email');
-            $table->string('amount');
+            $table->string('country_name');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('donations');
+        Schema::dropIfExists('country');
     }
 };

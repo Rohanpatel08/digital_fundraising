@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Campaign extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, HasUuids;
 
     protected $fillable = [
         'unique_code',
@@ -21,8 +23,13 @@ class Campaign extends Model
     {
         return $this->belongsTo(AccountPlan::class);
     }
-    public function user()
+    public function account()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function donation()
+    {
+        return $this->hasMany(Donation::class);
     }
 }
