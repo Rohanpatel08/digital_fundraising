@@ -73,9 +73,6 @@ class UserController extends Controller
                 $user->country = $country->country_name;
                 $user->save();
                 VerifyEmailJob::dispatch($user);
-                // $user->sendEmailVerificationNotification();
-                // Auth::login($user);
-                // $user = Auth::user();
                 $user = new UserResource($user);
             }
             return $this->responseController->responseValidation('User Created', $user);
