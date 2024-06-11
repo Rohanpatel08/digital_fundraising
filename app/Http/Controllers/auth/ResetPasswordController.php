@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\auth\ResetPasswordRequest;
 use App\Models\Account;
 use Ichtrojan\Otp\Otp;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class ResetPasswordController extends Controller
