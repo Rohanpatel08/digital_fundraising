@@ -72,6 +72,8 @@ class UserController extends Controller
                 $user->password = Hash::make($request['password']);
                 $user->country = $country->country_name;
                 $user->save();
+                auth()->login($user);
+                $user = auth()->user();
                 VerifyEmailJob::dispatch($user);
                 $user = new UserResource($user);
             }
@@ -97,9 +99,9 @@ class UserController extends Controller
             ]);
             $user = Account::where("email", $request['email'])->first();
             if ($user && Hash::check($request['password'], $user->password)) {
-                Auth::login($user, true);
+                auth()->login($user);
                 $token = $user->createToken($user->username . '-AuthToken')->plainTextToken;
-                $user = Auth::user();
+                $user = auth()->user();
                 return response()->json(['message' => 'user logged in successfully', 'attributes' => $token]);
             } else {
                 return $this->responseController->responseValidationError('Error in Login', ["credentials" => ["Enter valid credentials"]]);
