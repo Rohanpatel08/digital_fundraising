@@ -34,8 +34,10 @@ Route::middleware(['auth:sanctum', 'isAuth'])->group(function () {
         Route::get('/account/donation', 'getDonationByAccount');
     });
 
-    Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPassword']);
-    Route::post('password/reset', [ResetPasswordController::class, 'resetPassword']);
+    Route::prefix('password')->group(function () {
+        Route::post('/forgot', [ForgotPasswordController::class, 'forgotPassword']);
+        Route::post('/reset', [ResetPasswordController::class, 'resetPassword']);
+    });
 });
 
 Route::get('/campaign/{code}', [CampaignController::class, 'getCampaignByCode']);

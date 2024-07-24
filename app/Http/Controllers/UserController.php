@@ -12,6 +12,7 @@ use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Country;
 use App\Models\Plan;
+use App\Models\User;
 use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -72,10 +73,9 @@ class UserController extends Controller
                 $user->password = Hash::make($request['password']);
                 $user->country = $country->country_name;
                 $user->save();
+                auth()->login($user);
+                $user = auth()->user();
                 VerifyEmailJob::dispatch($user);
-                // $user->sendEmailVerificationNotification();
-                // Auth::login($user);
-                // $user = Auth::user();
                 $user = new UserResource($user);
             }
             return $this->responseController->responseValidation('User Created', $user);
@@ -100,9 +100,9 @@ class UserController extends Controller
             ]);
             $user = Account::where("email", $request['email'])->first();
             if ($user && Hash::check($request['password'], $user->password)) {
-                Auth::login($user, true);
+                auth()->login($user);
                 $token = $user->createToken($user->username . '-AuthToken')->plainTextToken;
-                $user = Auth::user();
+                $user = auth()->user();
                 return response()->json(['message' => 'user logged in successfully', 'attributes' => $token]);
             } else {
                 return $this->responseController->responseValidationError('Error in Login', ["credentials" => ["Enter valid credentials"]]);
@@ -162,6 +162,17 @@ class UserController extends Controller
         } catch (ValidationException $ex) {
             $err = $ex->validator->errors();
             return $this->responseController->responseValidationError('Error in assigning plan', $err);
+        }
+    }
+
+    public function users()
+    {
+        try {
+            $users = Account::all();
+            $users = UserResource::collection($users);
+            return $this->responseController->responseValidation('Users', $users);
+        } catch (Exception $e) {
+            return $this->responseController->responseValidationError('Error in users', $e);
         }
     }
 }

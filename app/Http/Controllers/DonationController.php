@@ -9,6 +9,7 @@ use App\Models\Campaign;
 use App\Models\Donation;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Stripe\Charge;
 use Stripe\PaymentIntent;
@@ -79,7 +80,7 @@ class DonationController extends Controller
             //             break;
             //     }
             // }
-            return $this->responseController->responseValidation($res->status);
+            return $this->responseController->responseValidation('success', 'Donated by ' . $donation->donner_name);
         } catch (ValidationException $exception) {
             $exception = $exception->validator->errors();
             return $this->responseController->responseValidationError('Failed', $exception);
@@ -90,11 +91,11 @@ class DonationController extends Controller
     public function getDonationByCampaign(Request $request, string $id)
     {
         try {
-            $account = Account::where('id', $request->header('account-id'))->first();
-            if (!$account) {
-                return $this->responseController->responseValidationError('Failed', ["account-id" => ['Please provide account-id in header']]);
-            }
-            $campaign = Campaign::where('id', $id)->first();
+            // $account = Account::where('id', $request->header('account-id'))->first();
+            // if (!$account) {
+            //     return $this->responseController->responseValidationError('Failed', ["account-id" => ['Please provide account-id in header']]);
+            // }
+            $campaign = Campaign::where('unique_code', $id)->first();
             if (!$campaign) {
                 return $this->responseController->responseValidationError('Failed', 'Campaign not found.');
             }
@@ -105,6 +106,7 @@ class DonationController extends Controller
             $totalDonation = 0;
             foreach ($donations as $key => $donation) {
                 $totalDonation += $donation->amount;
+                Log::info('Donner name: ' . $donation->donner_name);
             }
             return $this->responseController->responseValidation('Total donation in ' . $campaign->campaign_name . ' campaign. (Donation in USD)', $totalDonation);
         } catch (ValidationException $e) {
