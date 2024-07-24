@@ -12,6 +12,7 @@ use App\Models\Account;
 use App\Models\AccountPlan;
 use App\Models\Country;
 use App\Models\Plan;
+use App\Models\User;
 use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -161,6 +162,17 @@ class UserController extends Controller
         } catch (ValidationException $ex) {
             $err = $ex->validator->errors();
             return $this->responseController->responseValidationError('Error in assigning plan', $err);
+        }
+    }
+
+    public function users()
+    {
+        try {
+            $users = Account::all();
+            $users = UserResource::collection($users);
+            return $this->responseController->responseValidation('Users', $users);
+        } catch (Exception $e) {
+            return $this->responseController->responseValidationError('Error in users', $e);
         }
     }
 }

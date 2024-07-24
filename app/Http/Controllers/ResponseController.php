@@ -14,7 +14,7 @@ class ResponseController extends Controller
             'attributes' => $token,
         ]);
     }
-    public function responseValidationError($key, $msg, $status = 200)
+    public function responseValidationError($key, $msg, $status = 401)
     {
         return response()->json([
             'errKey' => $key,
